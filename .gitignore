@@ -1,0 +1,25 @@
+# Secretos y llaves de API (CRÍTICO)
+.env
+DataBufon/.env
+
+# Archivos de sistema y basura de Windows
+desktop.ini
+$RECYCLE.BIN/
+Thumbs.db
+
+# Archivos temporales de Python
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Carpetas de respaldo (para mantener el repo limpio)
+Backups_Bufon_Modularizado/
+Historicos_Bufon/
+
+# Configuración local del editor
+.vscode/
+
+# Carpetas de salida y backups (excluidas del repo)
+Ejecutables_Bufon/
+Historicos_Bufon/
+Backups_Bufon_Modularizado/
