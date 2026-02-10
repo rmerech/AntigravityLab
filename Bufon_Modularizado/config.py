@@ -88,17 +88,22 @@ except Exception as e:
 
 # --- DICCIONARIO DE AUTORES (CRÍTICOS INVITADOS) ---
 # --- DICCIONARIO DE AUTORES (CRÍTICOS INVITADOS) ---
+ESTADO_CARGA_AUTORES = "OK"
+
 def cargar_autores_desde_json():
     """Carga los perfiles de autores desde un archivo JSON externo."""
+    global ESTADO_CARGA_AUTORES
     ruta_json = ruta_carpeta / "perfiles_autores.json"
     try:
         with open(ruta_json, 'r', encoding='utf-8') as f:
             return json.load(f)
     except FileNotFoundError:
         print(f"[ALERTA]: No se encontró {ruta_json}. Usando diccionario vacío.")
+        ESTADO_CARGA_AUTORES = "FALTANTE"
         return {}
     except json.JSONDecodeError:
         print(f"[ERROR]: Error de sintaxis en {ruta_json}.")
+        ESTADO_CARGA_AUTORES = "ERROR_SINTAXIS"
         return {}
 
 DICCIONARIO_AUTORES = cargar_autores_desde_json()

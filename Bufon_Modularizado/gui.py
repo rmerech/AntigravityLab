@@ -15,7 +15,7 @@ from pathlib import Path
 from datetime import datetime
 
 # Importaciones de módulos locales
-from config import API_KEY, MAIL_USER, MAIL_PASS, MODELO_ACTUAL, DICCIONARIO_AUTORES, DIRECTORIO_INFORMES, USANDO_FALLBACK, ESTADO_DIRECTORIO
+from config import API_KEY, MAIL_USER, MAIL_PASS, MODELO_ACTUAL, DICCIONARIO_AUTORES, DIRECTORIO_INFORMES, USANDO_FALLBACK, ESTADO_DIRECTORIO, ESTADO_CARGA_AUTORES
 from utils import ToolTip, limpiar_texto
 from gestor_word import GestorWord
 
@@ -219,6 +219,21 @@ class ElBufonSemiotico(ctk.CTk):
         # Inicialización del cliente genai
         self._inicializar_cliente()
         self.verificar_estado_sistema()
+
+        # [v0.9.7.6m] Verificar estado de carga de autores al final del arranque
+        if ESTADO_CARGA_AUTORES == "FALTANTE":
+            self._escribir_seguro(self.textbox, "[ALERTA]: No se encontró 'perfiles_autores.json'. Funcionalidad de críticos limitada.", destino="status")
+            self._deshabilitar_controles_criticos()
+        elif ESTADO_CARGA_AUTORES == "ERROR_SINTAXIS":
+            self._escribir_seguro(self.textbox, "[ERROR]: 'perfiles_autores.json' corrupto. Revise el formato JSON.", destino="status")
+            self._deshabilitar_controles_criticos()
+
+    def _deshabilitar_controles_criticos(self):
+        """Deshabilita controles que dependen de los autores."""
+        self.btn_ejecutar.configure(state="disabled")
+        self.option_autor.set(" ¡¡Sin AUTORES!!")
+        self.option_autor.configure(state="disabled")
+        self.api_ready = False # Previene reactivación al cargar PDF
 
     def _inicializar_cliente(self):
         if self.api_ready:
@@ -535,7 +550,6 @@ class ElBufonSemiotico(ctk.CTk):
         try:
             print("[Terminal]: Enviando prompt a Google Gemini...")
             reader = PdfReader(self.ruta_archivo_pdf)
-            texto_relato = "\n".join([p.extract_text() for p in reader.pages])
             texto_relato = "\n".join([p.extract_text() for p in reader.pages])
             
             # Obtención del perfil desde el nuevo estructura JSON (Diccionario o String)
