@@ -36,11 +36,55 @@ API_KEY = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
 MAIL_USER = os.getenv("EMAIL_USER")
 MAIL_PASS = os.getenv("EMAIL_PASS")
 MODELO_ACTUAL = os.getenv("GENAI_MODEL", "gemini-2.0-flash") # [NUEVO v0.9.7.1] Persistencia de modelo
-DIRECTORIO_INFORMES = os.getenv("OUTPUT_FOLDER")
-if not DIRECTORIO_INFORMES:
-    DIRECTORIO_INFORMES = ruta_carpeta / "DataBufon"
+
+# --- GESTIÓN ROBUSTA DE DIRECTORIOS (v0.9.7.7m) ---
+# Intentamos usar la ruta del .env, pero validamos que sea segura.
+_ruta_env = os.getenv("OUTPUT_FOLDER")
+USANDO_FALLBACK = False
+ESTADO_DIRECTORIO = "DESCONOCIDO"
+
+if _ruta_env:
+    _ruta_candidata = Path(_ruta_env)
+    # Validaciones: Debe ser absoluta y el padre debe existir (o ser creable)
+    # Nota: Para ser prácticos, si es absoluta intentamos usarla.
+    # Si falla al crear o no tiene permisos, activaremos fallback.
+    try:
+        if not _ruta_candidata.is_absolute():
+            raise ValueError("La ruta no es absoluta")
+        
+        if not _ruta_candidata.exists():
+            _ruta_candidata.mkdir(parents=True, exist_ok=True)
+            ESTADO_DIRECTORIO = "CREADO"
+        else:
+            ESTADO_DIRECTORIO = "EXISTENTE"
+        
+        # Prueba de escritura rápida
+        _test_file = _ruta_candidata / ".write_test"
+        with open(_test_file, 'w') as f:
+            f.write("ok")
+        os.remove(_test_file)
+        
+        DIRECTORIO_INFORMES = _ruta_candidata
+    except Exception as e:
+        print(f"[Sistema]: Ruta inválida en .env ({e}). Usando fallback.")
+        USANDO_FALLBACK = True
+        ESTADO_DIRECTORIO = "FALLBACK"
+        DIRECTORIO_INFORMES = ruta_carpeta / "DataBufon"
 else:
-    DIRECTORIO_INFORMES = Path(DIRECTORIO_INFORMES)
+    USANDO_FALLBACK = True
+    ESTADO_DIRECTORIO = "FALLBACK"
+    DIRECTORIO_INFORMES = ruta_carpeta / "DataBufon"
+
+# Aseguramos que el directorio final exista SÍ o SÍ inmediatamente
+try:
+    if not DIRECTORIO_INFORMES.exists():
+         DIRECTORIO_INFORMES.mkdir(parents=True, exist_ok=True)
+         if ESTADO_DIRECTORIO == "FALLBACK":
+             # Si estamos en fallback y tuvimos que crear la carpeta local
+             pass 
+except Exception as e:
+    print(f"[FATAL]: No se pudo crear directorio de informes: {e}")
+
 
 # --- DICCIONARIO DE AUTORES (CRÍTICOS INVITADOS) ---
 # --- DICCIONARIO DE AUTORES (CRÍTICOS INVITADOS) ---

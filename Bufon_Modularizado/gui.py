@@ -15,7 +15,7 @@ from pathlib import Path
 from datetime import datetime
 
 # Importaciones de módulos locales
-from config import API_KEY, MAIL_USER, MAIL_PASS, MODELO_ACTUAL, DICCIONARIO_AUTORES, DIRECTORIO_INFORMES
+from config import API_KEY, MAIL_USER, MAIL_PASS, MODELO_ACTUAL, DICCIONARIO_AUTORES, DIRECTORIO_INFORMES, USANDO_FALLBACK, ESTADO_DIRECTORIO
 from utils import ToolTip, limpiar_texto
 from gestor_word import GestorWord
 
@@ -162,10 +162,22 @@ class ElBufonSemiotico(ctk.CTk):
 
         try:
             self.textbox._textbox.tag_config("system_msg", foreground="#00FF00", font=("Courier New", 10))
+            self.textbox._textbox.tag_config("warning_msg", foreground="#FF5555", font=("Courier New", 10, "bold"))
         except Exception:
             pass
 
         self._escribir_seguro(self.textbox, "--- El sistema espera su consulta ---\n", modo="overwrite")
+        
+        if ESTADO_DIRECTORIO == "FALLBACK":
+            msg_alerta = f"[ALERTA RUTA]: La ruta del .env falló. Se usará la carpeta local 'DataBufon'.\n"
+            msg_alerta += f"Ruta activa: {DIRECTORIO_INFORMES}\n"
+            self._escribir_seguro(self.textbox, msg_alerta)
+        elif ESTADO_DIRECTORIO == "CREADO":
+            msg_alerta = f"\n[AVISO SISTEMA]: La carpeta de destino no existía. Se ha creado automáticamente en: \n ----->> {DIRECTORIO_INFORMES} Puede cambiarla en AJUSTES\n"
+            self._escribir_seguro(self.textbox, msg_alerta)
+        else:
+            # Caso EXISTENTE (o cualquier otro): Mostrar ruta activa informativa
+            self._escribir_seguro(self.textbox, f"\n[System]: Ruta de informes actual: {DIRECTORIO_INFORMES}\n")
 
         # Botones Acciones
         self.action_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
@@ -210,7 +222,9 @@ class ElBufonSemiotico(ctk.CTk):
             widget.configure(state="normal")
             
             tags_to_apply = ()
-            if texto.lstrip().startswith(("[System]", "[Terminal]", "[ALERTA]")):
+            if texto.lstrip().startswith(("[ALERTA RUTA]", "[AVISO SISTEMA]", "[AVISO_RUTA]", "[FALLBACK]")):
+                 tags_to_apply = ("warning_msg",)
+            elif texto.lstrip().startswith(("[System]", "[Terminal]", "[ALERTA]")):
                  tags_to_apply = ("system_msg",)
             
             start_index = widget.index("insert")
