@@ -37,6 +37,17 @@ class ElBufonSemiotico(ctk.CTk):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
+        # --- BARRA DE ESTADO (Inicialización Temprana) ---
+        # Se inicializa al principio para interceptar logs de arranque sin crash.
+        self.status_bar_frame = ctk.CTkFrame(self, height=25, corner_radius=0, fg_color="transparent")
+        self.status_bar_frame.grid(row=1, column=0, columnspan=2, sticky="ew", padx=0, pady=0)
+        
+        self.lbl_status = ctk.CTkLabel(self.status_bar_frame, text="Iniciando sistema...", anchor="w", font=("Consolas", 11), text_color="gray")
+        self.lbl_status.pack(side="left", padx=10, fill="x", expand=True)
+        
+        self.status_tooltip = ToolTip(self.lbl_status, "Estado del sistema")
+        
+
         # Variables de estado
         self.ruta_archivo_pdf = ""
         self.ruta_ultimo_word = ""
@@ -66,7 +77,7 @@ class ElBufonSemiotico(ctk.CTk):
         # Logo y Versión
         self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="EL BUFÓN\nSEMIÓTICO", font=ctk.CTkFont(size=20, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 0))
-        self.version_label = ctk.CTkLabel(self.sidebar_frame, text="v0.9.7.5m", font=ctk.CTkFont(size=10), text_color="gray")
+        self.version_label = ctk.CTkLabel(self.sidebar_frame, text="v0.9.7.6m", font=ctk.CTkFont(size=10), text_color="gray")
         self.version_label.grid(row=1, column=0, padx=20, pady=(0, 10))
 
         # Botón Cargar
@@ -161,12 +172,9 @@ class ElBufonSemiotico(ctk.CTk):
         self.textbox.grid(row=2, column=0, padx=20, pady=10, sticky="nsew")
 
         try:
-            self.textbox._textbox.tag_config("system_msg", foreground="#00FF00", font=("Courier New", 10))
             self.textbox._textbox.tag_config("warning_msg", foreground="#FF5555", font=("Courier New", 10, "bold"))
         except Exception:
             pass
-
-        self._escribir_seguro(self.textbox, "--- El sistema espera su consulta ---\n", modo="overwrite")
         
         if ESTADO_DIRECTORIO == "FALLBACK":
             msg_alerta = f"[ALERTA RUTA]: La ruta del .env falló. Se usará la carpeta local 'DataBufon'.\n"
@@ -202,8 +210,11 @@ class ElBufonSemiotico(ctk.CTk):
         self.btn_conversar = ctk.CTkButton(self.main_frame, text="CONVERSAR CON EL AUTOR",
                                             command=self.abrir_coloquio,
                                             state="disabled", fg_color="#5C3A93", height=35)
-        self.btn_conversar.grid(row=5, column=0, padx=20, pady=(0, 20), sticky="ew")
+        self.btn_conversar.grid(row=5, column=0, padx=20, pady=(0, 10), sticky="ew")
         self.btn_conversar.grid_remove() # Oculto al inicio
+
+        # --- BARRA DE ESTADO (Movida al inicio) ---
+        # El código anterior se ha eliminado de aquí.
 
         # Inicialización del cliente genai
         self._inicializar_cliente()
@@ -217,11 +228,43 @@ class ElBufonSemiotico(ctk.CTk):
             print("[Terminal]: ADVERTENCIA - No se detectó API KEY.")
             self._escribir_seguro(self.textbox, "\n[ALERTA]: No se detectó API KEY de Gemini. Revise su archivo .env.\n")
 
-    def _escribir_seguro(self, widget, texto, modo="append"):
+    def _escribir_seguro(self, widget, texto, modo="append", destino="chat"):
+        """
+        Escribe en el widget de forma segura (thread-safe).
+        Si destino="chat" (default), verifica si es mensaje de sistema para redirigir a status bar.
+        """
         try:
+            # Lógica de redirección a Status Bar
+            # Interceptamos: [ALERTA], [WARNING], [System], [AVISO], [ALERTA RUTA], [AVISO SISTEMA], [FALLBACK]
+            es_log_sistema = texto.lstrip().startswith(("[System]", "[Terminal]", "[ALERTA]", "[WARNING]", "[AVISO]", "[FALLBACK]", "[ALERTA RUTA]", "[AVISO SISTEMA]"))
+            
+            if destino == "status" or (destino == "chat" and es_log_sistema):
+                # Limpiar texto de saltos de línea excesivos
+                texto_limpio = texto.strip()
+                if not texto_limpio: return # Ignorar líneas vacías en status bar
+
+                # Formatear para barra de estado (una línea) y tooltip (multilínea)
+                texto_barra = texto_limpio.replace("\n", " | ")
+                self.lbl_status.configure(text=texto_barra)
+                
+                # Actualizar el tooltip con el mensaje completo
+                self.status_tooltip.text = texto_limpio
+                
+                # Color según severidad
+                # Si contiene ALERTA, WARNING, AVISO, FALLBACK -> Rojo/Naranja
+                # Si es System, Terminal -> Gris
+                upper_text = texto.upper()
+                if any(tag in upper_text for tag in ["ALERTA", "WARNING", "AVISO", "FALLBACK"]):
+                    self.lbl_status.configure(text_color="#FF5555") # Rojo claro para alertas
+                else:
+                    self.lbl_status.configure(text_color="gray") # Gris para info normal
+                return
+
+            # Si no es log de sistema, escribir en el Chat (Textbox)
             widget.configure(state="normal")
             
             tags_to_apply = ()
+            # Mantener lógica de tags por si acaso se fuerza escritura en chat con destino="chat" explicito y sin tags de sistema
             if texto.lstrip().startswith(("[ALERTA RUTA]", "[AVISO SISTEMA]", "[AVISO_RUTA]", "[FALLBACK]")):
                  tags_to_apply = ("warning_msg",)
             elif texto.lstrip().startswith(("[System]", "[Terminal]", "[ALERTA]")):
@@ -246,7 +289,7 @@ class ElBufonSemiotico(ctk.CTk):
             if tags_to_apply:
                 try:
                      count = len(texto)
-                     widget._textbox.tag_add("system_msg", start_index, f"{start_index}+{count}c")
+                     widget._textbox.tag_add(tags_to_apply[0], start_index, f"{start_index}+{count}c")
                 except:
                      pass
 
