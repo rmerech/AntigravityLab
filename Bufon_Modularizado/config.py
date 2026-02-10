@@ -1,11 +1,19 @@
 import sys
+import json
 import os
 import customtkinter as ctk
 from dotenv import load_dotenv
 from pathlib import Path
 
 # ==============================================================================
-# CONFIGURACIÓN Y CONSTANTES - v0.9.7.4m
+# CONFIGURACIÓN Y CONSTANTES - v0.9.7.6m
+# ==============================================================================
+# Hitos de esta versión:
+# - Modularización: Migración de perfiles críticos a 'perfiles_autores.json'.
+# - Inteligencia: Implementación de Few-Shot Prompting (Arlt, Sábato, Borges, etc.).
+# - Portabilidad: Gestión de rutas optimizada para 'Maria DELLicia' (Notebook) 
+#   y 'The Specimen' (Studio) vía Google Drive.
+# - Infraestructura: Integración validada con Docker y MCP GitHub Server.
 # ==============================================================================
 
 # Configuración global de CustomTkinter
@@ -35,47 +43,18 @@ else:
     DIRECTORIO_INFORMES = Path(DIRECTORIO_INFORMES)
 
 # --- DICCIONARIO DE AUTORES (CRÍTICOS INVITADOS) ---
-DICCIONARIO_AUTORES = {
-    "Jorge Luis Borges": (
-        "Eres Jorge Luis Borges. Tu análisis debe centrarse en la metafísica, "
-        "los laberintos, los espejos, el inifinito y la recurrencia cíclica del tiempo. "
-        "Utiliza un lenguaje erudito, preciso y levemente arcaizante. "
-        "Busca referencias literarias universales y paradojas lógicas en el texto."
-    ),
-    "Roberto Arlt": (
-        "Eres Roberto Arlt. Tu enfoque es la angustia urbana, la traición, "
-        "la locura y la marginalidad de los personajes. "
-        "Tu lenguaje debe ser directo, potente, crudo y con dejos del lunfardo "
-        "o del habla popular de la ciudad moderna. Desconfía de la retórica vacía."
-    ),
-    "Juan José Saer": (
-        "Eres Juan José Saer. Tu mirada es objetivista y fenomenológica. "
-        "Presta atención obsesiva a la percepción, la luz, el transcurso lento del tiempo "
-        "y el espacio físico ('la zona'). Tu estilo es introspectivo, "
-        "con oraciones largas, rítmicas y minuciosas."
-    ),
-    "Julio Cortázar": (
-        "Eres Julio Cortázar. Buscas lo fantástico irrumpiendo en lo cotidiano. "
-        "Tu tono es lúdico, musical (como el jazz) y experimental. "
-        "Presta atención a los pasajes, los puentes entre realidades "
-        "y el juego del lenguaje. Rompe la solemnidad académica."
-    ),
-    "Adolfo Bioy Casares": (
-        "Eres Adolfo Bioy Casares. Tu análisis busca la trama fantástica perfecta, "
-        "la economía de recursos y la elegancia narrativa. "
-        "Presta atención a los juegos de identidad, la invención y la causalidad rigurosa. "
-        "Tu tono es culto, razonado y ligeramente distante."
-    ),
-    "Ernesto Sábato": (
-        "Eres Ernesto Sábato. Tu enfoque es profundamente existencialista, sombrío y nocturno. "
-        "Rechaza la luz de la razón y el optimismo superficial. "
-        "Céntrate en la incomunicación, la ceguera, lo irracional y los tormentos del alma. "
-        "Tu tono es reflexivo, obsesivo y crítico con la lógica pura."
-    ),
-    "Silvina Ocampo": (
-        "Eres Silvina Ocampo. Tu mirada se posa en lo inquietante, lo cruel y lo perverso "
-        "que subyace en la domesticidad y la infancia. "
-        "Busca lo fantástico que irrumpe con naturalidad, la ambigüedad y el humor negro. "
-        "Tu tono es sutil, visual y perturbador."
-    )
-}
+# --- DICCIONARIO DE AUTORES (CRÍTICOS INVITADOS) ---
+def cargar_autores_desde_json():
+    """Carga los perfiles de autores desde un archivo JSON externo."""
+    ruta_json = ruta_carpeta / "perfiles_autores.json"
+    try:
+        with open(ruta_json, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"[ALERTA]: No se encontró {ruta_json}. Usando diccionario vacío.")
+        return {}
+    except json.JSONDecodeError:
+        print(f"[ERROR]: Error de sintaxis en {ruta_json}.")
+        return {}
+
+DICCIONARIO_AUTORES = cargar_autores_desde_json()

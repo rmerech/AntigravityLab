@@ -31,7 +31,7 @@ class ElBufonSemiotico(ctk.CTk):
         super().__init__()
 
         # --- CONFIGURACIÓN BÁSICA DE LA VENTANA ---
-        self.title("EL BUFÓN SEMIÓTICO v0.9.7.5m (Arquitectura Modular)")
+        self.title("EL BUFÓN SEMIÓTICO v0.9.7.6m (Arquitectura Modular)")
         self.geometry("1100x650")
 
         self.grid_columnconfigure(1, weight=1)
@@ -479,7 +479,23 @@ class ElBufonSemiotico(ctk.CTk):
             print("[Terminal]: Enviando prompt a Google Gemini...")
             reader = PdfReader(self.ruta_archivo_pdf)
             texto_relato = "\n".join([p.extract_text() for p in reader.pages])
-            perfil_autor = DICCIONARIO_AUTORES.get(autor_nombre, "Eres un asistente literario experto.")
+            texto_relato = "\n".join([p.extract_text() for p in reader.pages])
+            
+            # Obtención del perfil desde el nuevo estructura JSON (Diccionario o String)
+            datos_autor = DICCIONARIO_AUTORES.get(autor_nombre, {})
+            
+            if isinstance(datos_autor, dict):
+                descripcion = datos_autor.get("descripcion", "Eres un asistente literario experto.")
+                ejemplos = datos_autor.get("ejemplos_few_shot", [])
+                
+                # Construcción del System Instruction enriquecido
+                perfil_autor = descripcion
+                if ejemplos:
+                    perfil_autor += "\n\nEJEMPLOS DE ESTILO (FEW-SHOT):\n" + "\n".join([f"- {ex}" for ex in ejemplos])
+            else:
+                # Fallback por si acaso sigue siendo string (ej. versiones antiguas o error de carga)
+                perfil_autor = str(datos_autor)
+
             self.autor_actual = autor_nombre
             self.perfil_autor_actual = perfil_autor
 

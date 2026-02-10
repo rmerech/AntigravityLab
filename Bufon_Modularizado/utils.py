@@ -6,7 +6,7 @@ from docx.oxml import OxmlElement
 from typing import Optional
 
 # ==============================================================================
-# HERRAMIENTAS AUXILIARES - v0.9.7.4m
+# HERRAMIENTAS AUXILIARES - v0.9.7.6m
 # ==============================================================================
 
 class ToolTip(object):

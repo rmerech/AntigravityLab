@@ -1,7 +1,7 @@
 from gui import ElBufonSemiotico
 
 # ==============================================================================
-# PUNTO DE ENTRADA - EL BUFÓN SEMIÓTICO v0.9.7.4m
+# PUNTO DE ENTRADA - EL BUFÓN SEMIÓTICO v0.9.7.6m
 # ==============================================================================
 
 if __name__ == "__main__":

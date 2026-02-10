@@ -5,7 +5,7 @@ from datetime import datetime
 from utils import poner_borde_inferior
 
 # ==============================================================================
-# GESTOR DE WORD - v0.9.7.4m
+# GESTOR DE WORD - v0.9.7.6m
 # ==============================================================================
 
 class GestorWord:
