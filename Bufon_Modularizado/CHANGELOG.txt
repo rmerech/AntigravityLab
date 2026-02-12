@@ -1,0 +1,79 @@
+# Release v0.9.8m: "Arquitectura Modular & Live Connect"
+
+Esta versión marca un antes y un después en la estabilidad y mantenibilidad de "El Bufón Semiótico". Se ha realizado una refactorización completa del código base y se han añadido validaciones de conectividad en tiempo real.
+
+## 🌟 Novedades Principales
+
+### 1. Refactorización Modular (Cirugía Mayor)
+El núcleo monolítico (`gui.py`) se ha dividido en módulos especializados, reduciendo la deuda técnica y facilitando futuras expansiones:
+* **`agente_ia.py`**: Nuevo cerebro independiente que encapsula la lógica de Gemini, construcción de prompts y gestión de perfiles.
+* **`gestor_email.py`**: Módulo dedicado exclusivamente a la gestión SMTP y envío de reportes.
+* **`ventanas.py`**: Gestión desacoplada de ventanas secundarias (Ajustes, Coloquio, Selectores).
+
+### 2. Expansión de Contenido: "La Liga Internacional"
+* **Selector de Origen:** Nuevo control en la barra lateral que permite alternar dinámicamente entre autores "Nacionales" e "Internacionales".
+* **Nuevos Perfiles Críticos:** Se han incorporado las conciencias simuladas de grandes maestros universales:
+    * **Edgar Allan Poe:** Análisis de atmósfera y unidad de efecto.
+    * **Franz Kafka:** Lógica del absurdo y alienación burocrática.
+    * **Fiódor Dostoyevski:** Profundidad psicológica y conflicto moral.
+    * **Charles Dickens, León Tolstói y Gabriel García Márquez.**
+
+### 3. Verificación de Conectividad Real (Live Ping)
+* **Nuevo Indicador Visual:** Se acabó la incertidumbre. El sistema ahora realiza un "ping" real a los servidores de Google Gemini al iniciar.
+* **Feedback Instantáneo:**
+    * 🟠 `PROBANDO RED...`: Verificando enlace.
+    * 🟢 `API CONECTADA`: Conexión exitosa y operativa.
+    * 🔴 `SIN CONEXIÓN`: Alerta visual si falla Internet o la API Key.
+
+### 4. Mejoras en Experiencia de Usuario (UX)
+* **Persistencia del Coloquio:** Ahora es posible cerrar la ventana de chat y volver a abrirla sin perder el contexto ni tener que regenerar el análisis completo. El botón "CONVERSAR CON EL AUTOR" permanece activo.
+* **Auto-Guardado Inteligente:** El reporte se actualiza automáticamente en el disco al cerrar la ventana de chat, anexando la conversación final.
+
+### 5. Principio de Atomicidad: "Una Sesión = Un Archivo"
+* **Gestión Documental Inteligente:** Se ha eliminado la generación de múltiples archivos .docx para una misma sesión de análisis.
+* **Comportamiento:** Ahora, al chatear con el autor o actualizar el reporte, el sistema **actualiza el mismo archivo** creado al inicio, manteniendo un historial único y coherente en lugar de llenar la carpeta de versiones fragmentadas.
+
+### 6. Infraestructura de Correo Agnóstica
+* **Adiós al Hardcoding:** El sistema ya no está atado exclusivamente a Yahoo.
+* **Configuración Flexible:** Ahora es posible definir `SMTP_SERVER` y `SMTP_PORT` directamente en el archivo `.env`.
+* **Compatibilidad Total:** Si no se configuran estos valores, el sistema utiliza Yahoo por defecto, asegurando que nada se rompa para los usuarios actuales.
+
+### 7. Seguridad y Limpieza
+* **Auditoría de Credenciales:** Reforzamiento de `.gitignore` para blindar claves de API y configuraciones locales.
+* **Refactorización:** Limpieza de redundancias en `gui.py` y `config.py` post-modularización.
+
+### 8. Robustez y Tolerancia a Fallos (UX)
+* **Inicio No Bloqueante (Degradación Elegante):** * El sistema ya no impide el funcionamiento si faltan las credenciales de correo (`EMAIL_USER` / `EMAIL_PASS`).
+* Prioridad al Análisis: Si la `GOOGLE_API_KEY` es válida, el "Laboratorio Literario" se activa completamente.
+* **Gestión Dinámica de UI:**
+* Si el correo no está configurado, el botón "MAIL A COLABORADORES" y el campo de destinatarios se deshabilitan visualmente (estado gris/disabled), pero el análisis y el chat siguen operativos.
+* Se añade un aviso discreto en el chat indicando que la función de envío está desactivada, sin interrumpir el flujo de trabajo.
+* **Feedback de Conexión Real:**
+* El indicador de red ("PROBANDO RED" / "CONECTADO") ahora reporta exclusivamente el estado del enlace con la API de Google Gemini, eliminando falsos negativos por falta de configuración SMTP.
+
+### 9. Interfaz de "Lentes Críticos" (Quick Prompts)
+* **Barra de Enfoque Rápido:** Implementación de una "botonera de chips" situada estratégicamente sobre el campo de instrucciones manuales.
+* **Lentes Predefinidas:** 5 botones de inyección rápida de prompt:
+    * *Estándar:* Trama, Estilo, Personajes, Final (Estilo visual "Ghost/Minimalista").
+    * *Intensidad Alta:* "🩸 Despiadado" (Estilo visual diferenciado en rojo oscuro para advertir sobre la crudeza de la crítica).
+* **Lógica de Concatenación:** El sistema permite sumar múltiples enfoques (ej: Trama + Estilo) sin borrar el texto previo.
+* **Herramienta de Reset:** Inclusión de un botón de "Limpieza" (🧹) para borrar rápidamente el campo de instrucciones y comenzar de nuevo.
+
+### 10. Refinamiento del Motor de Prompts (Backend)
+* **Jerarquía de Instrucciones:** Se ha modificado la lógica de inyección en `agente_ia.py`.
+* **Instrucción Directa:** El campo "Nota Adicional" (ahora alimentado por los botones) ya no se envía como mero "contexto", sino como una "INSTRUCCIÓN DIRECTA DEL EDITOR". Esto asegura que el modelo (Gemini) priorice estas órdenes específicas por encima de la descripción general del perfil del autor.
+
+### 11. Semáforo de Carga Cognitiva (Token Estimator)
+* **Predicción de Costo:** Nuevo algoritmo en `utils.py` que estima el "peso" del texto cargado antes de enviarlo a la IA.
+* **Feedback Visual:** El sistema clasifica el archivo en tres niveles de complejidad mediante códigos de color:
+* 🟢 **Carga Ligera (<30k tokens):** Ideal para cuentos y ensayos breves. Respuesta rápida.
+* 🟡 **Carga Media (<80k tokens):** Novelas cortas (Nouvelles). Procesamiento estándar.
+* 🔴 **Carga Pesada (>80k tokens):** Novelas extensas. Advierte visualmente sobre posible latencia o riesgo de timeout (ResourceExhausted).
+
+## 🛠️ Detalles Técnicos
+* Optimización de importaciones para reducir tiempos de carga.
+* Manejo de hilos (threading) para la verificación de red sin congelar la UI.
+* Limpieza de código duplicado en la gestión de rutas y alertas.
+
+---
+**Desarrollado por Robel & Gemini | AntigravityLab 2026**

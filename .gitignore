@@ -1,0 +1,33 @@
+# --- SECRETOS Y LLAVES DE API (CRÍTICO - JAMÁS SUBIR) ---
+.env
+DataBufon/.env
+
+# --- SISTEMA OPERATIVO ---
+desktop.ini
+$RECYCLE.BIN/
+Thumbs.db
+.DS_Store
+
+# --- PYTHON ---
+**/__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+# --- IDEs Y EDITORES ---
+.vscode/
+.idea/
+
+# --- CARPETAS DEL PROYECTO (SALIDAS Y LOGS) ---
+DataBufon/
+Backups_Bufon_Modularizado/
+Historicos_Bufon/
+Ejecutables_Bufon/
+
+# --- ARCHIVOS GENERADOS ---
+**/*.docx
+**/*.pdf
+
+# --- UTILIDADES INTERNAS (NO COMPARTIR) ---
+IAScripts/
